@@ -1,0 +1,32 @@
+{
+  "manifest_version": 3,
+  "name": "e-Gov法令検索のアラビア数字化",
+  "version": "1.0",
+  "description": "漢数字からアラビア数字への変換等",
+  "content_scripts": [
+    {
+      "matches": [
+        "https://laws.e-gov.go.jp/*"
+      ],
+      "js": [
+        "content.js"
+      ],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": [
+        "https://laws.e-gov.go.jp/*"
+      ],
+      "js": [
+        "jump.js"
+      ],
+      "run_at": "document_idle"
+    }
+  ],
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "96": "icons/icon96.png",
+    "128": "icons/icon128.png"
+  }
+}
