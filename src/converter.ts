@@ -14,20 +14,20 @@ const japaneseNumeralToArabicNumeral: { [key: string]: number } = {
 const smallUnits: { [key: string]: number } = {
   '十': 10,
   '百': 100,
-  '千': 1000,
+  '千': 1_000,
 };
 
 const largeUnits: { [key: string]: number } = {
-  '万': 10000,
-  '億': 100000000,
-  '兆': 1000000000000,
+  '万': 10_000,
+  '億': 100_000_000,
+  '兆': 1_000_000_000_000,
 };
 
 export function convertJapaneseNumeralToNumber(text: string): string {
-  const pattern = /(?:([〇一二三四五六七八九十百千万億兆]+)分の([〇一二三四五六七八九十百千万億兆]+))|(?:([〇一二三四五六七八九十百千万億兆]+)円)|(?:([〇一二三四五六七八九十百千万億兆]+)年)|(?:([〇一二三四五六七八九十百千万億兆]+)月)|(?:([〇一二三四五六七八九十百千万億兆]+)日)|(?:([〇一二三四五六七八九十百千万億兆]+)人)|(?:([〇一二三四五六七八九十百千万億兆]+)割)|(?:([〇一二三四五六七八九十百千万億兆・]+)パーセント)|(?:([〇一二三四五六七八九十百千万億兆]+)箇月)|(?:([〇一二三四五六七八九十百千万億兆]+)週)|(?:([〇一二三四五六七八九十百千万億兆]+)期)|(?:([〇一二三四五六七八九十百千万億兆]+)親等)|(?:([〇一二三四五六七八九十百千万億兆]+)個)|(?:([〇一二三四五六七八九十百千万億兆]+)歳)|(?:第([〇一二三四五六七八九十百千万億兆]+)(?!取得者|債務者|者|方|般))|(?:前([〇一二三四五六七八九十百千万億兆]+)(?!方|般))|(?:の(?!一部)([〇一二三四五六七八九十百千万億兆]+)(?!方|般))|(?:([〇一二三四五六七八九十百千]+)万)/g;
+  const pattern = /(?:([〇一二三四五六七八九十百千万億兆]+)分の([〇一二三四五六七八九十百千万億兆]+))|(?:([〇一二三四五六七八九十百千万億兆]+)円)|(?:([〇一二三四五六七八九十百千万億兆]+)年)|(?:([〇一二三四五六七八九十百千万億兆]+)月)|(?:([〇一二三四五六七八九十百千万億兆]+)日)|(?:([〇一二三四五六七八九十百千万億兆]+)人)|(?:([〇一二三四五六七八九十百千万億兆]+)割)|(?:([〇一二三四五六七八九十百千万億兆・]+)パーセント)|(?:([〇一二三四五六七八九十百千万億兆]+)箇月)|(?:([〇一二三四五六七八九十百千万億兆]+)週)|(?:([〇一二三四五六七八九十百千万億兆]+)期)|(?:([〇一二三四五六七八九十百千万億兆]+)親等)|(?:([〇一二三四五六七八九十百千万億兆]+)個)|(?:([〇一二三四五六七八九十百千万億兆]+)歳)|(?:([〇一二三四五六七八九十百千万億兆]+)犯)|(?:第([〇一二三四五六七八九十百千万億兆]+)(?!取得者|債務者|者|方|般))|(?:前([〇一二三四五六七八九十百千万億兆]+)(?!方|般))|(?:の(?!一部)([〇一二三四五六七八九十百千万億兆]+)(?!方|般))|(?:([〇一二三四五六七八九十百千]+)万)/g;
 
   return text.replace(pattern, (match, fractionDenominator, fractionNumerator, moneyNum, yearNum, monthNum, dayNum,
-    personNum, percentNum, percentageNum, monthCountNum, weekNum, kiNum, shintoNum, koNum, saiNum, genericOrdinal, genericPrevious, noNum, manNum) => {
+    personNum, percentNum, percentageNum, monthCountNum, weekNum, kiNum, shintoNum, koNum, saiNum, hanNum, genericOrdinal, genericPrevious, noNum, manNum) => {
 
     if (fractionDenominator && fractionNumerator) {
       return `${Number(convertString(fractionNumerator)).toLocaleString()}/${Number(convertString(fractionDenominator)).toLocaleString()}`;
@@ -50,6 +50,7 @@ export function convertJapaneseNumeralToNumber(text: string): string {
     if (shintoNum) return `${Number(convertString(shintoNum)).toLocaleString()}親等`;
     if (koNum) return `${Number(convertString(koNum)).toLocaleString()}個`;
     if (saiNum) return `${Number(convertString(saiNum)).toLocaleString()}歳`;
+    if (hanNum) return `${Number(convertString(hanNum)).toLocaleString()}犯`;
 
     if (genericOrdinal) return `第${Number(convertString(genericOrdinal)).toLocaleString()}`;
     if (genericPrevious) return `前${Number(convertString(genericPrevious)).toLocaleString()}`;

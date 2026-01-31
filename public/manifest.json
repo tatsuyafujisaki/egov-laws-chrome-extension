@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "e-Gov法令検索のアラビア数字化",
+  "name": "e-Gov法令アラビア数字化",
   "version": "1.0",
-  "description": "漢数字からアラビア数字への変換等",
+  "description": "e-Gov法令の漢数字をアラビア数字に変換する等",
   "content_scripts": [
     {
       "matches": [

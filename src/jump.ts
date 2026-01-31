@@ -203,11 +203,38 @@ function scrollToArticle(input: string) {
   }
 
   if (candidates.length > 0) {
-    // Pick the one with the highest score. If scores are equal, the first one (document order) wins.
-    candidates.sort((a, b) => b.score - a.score);
-    const best = candidates[0]!;
-    best.node.scrollIntoView({ behavior: 'auto', block: 'center' });
-    applyPremiumHighlight(best.node, best.text);
+    // Separate TOC candidates and main content candidates
+    // TOC entries usually have very short text content and are often in a sidebar
+    const tocCandidates = candidates.filter(c => {
+      const isSidebar = c.node.closest('aside, nav, [class*="side"], [class*="tree"], [id*="side"], [id*="tree"]');
+      return isSidebar;
+    });
+
+    const mainCandidates = candidates.filter(c => !tocCandidates.includes(c));
+
+    // Pick the best for each
+    tocCandidates.sort((a, b) => b.score - a.score);
+    mainCandidates.sort((a, b) => b.score - a.score);
+
+    const bestToc = tocCandidates[0];
+    const bestMain = mainCandidates[0];
+
+    if (bestToc) {
+      // Trigger the site's own jump logic by clicking the TOC entry
+      bestToc.node.click();
+      // Also scroll the TOC itself to show the selection
+      bestToc.node.scrollIntoView({ behavior: 'auto', block: 'center' });
+    }
+
+    if (bestMain) {
+      // Scroll to and highlight the article in the main content area
+      bestMain.node.scrollIntoView({ behavior: 'auto', block: 'center' });
+      applyPremiumHighlight(bestMain.node, bestMain.text);
+    } else if (bestToc && !bestMain) {
+      // If only TOC found, highlight it there as fallback
+      applyPremiumHighlight(bestToc.node, bestToc.text);
+    }
+
     if (jumpTimeout) clearTimeout(jumpTimeout);
   } else {
     console.log(`Article targets ${JSON.stringify(targets)} not found. (Input: "${input}")`);
