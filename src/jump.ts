@@ -37,7 +37,7 @@ function getOrCreateHUD(): HTMLDivElement {
     transition: 'all 0.4s cubic-bezier(0.23, 1, 0.32, 1)',
     pointerEvents: 'none',
     letterSpacing: '-0.02em',
-    scale: '0.9'
+    scale: '0.9',
   });
 
   hudElement.innerHTML = `
@@ -112,7 +112,7 @@ function toJapaneseNumeral(n: number): string {
     if (d !== 0) {
       const digitJapaneseNumeral = digits[d] || '';
       const unitJapaneseNumeral = units[pos] || '';
-      const temp = (d === 1 && pos > 0) ? '' : digitJapaneseNumeral;
+      const temp = d === 1 && pos > 0 ? '' : digitJapaneseNumeral;
       res = temp + unitJapaneseNumeral + res;
     }
     if (i === 3 && s.length > 4) {
@@ -123,7 +123,9 @@ function toJapaneseNumeral(n: number): string {
 }
 
 function toFullWidth(s: string): string {
-  return s.replace(/[0-9]/g, m => String.fromCharCode(m.charCodeAt(0) + 0xFEE0));
+  return s.replace(/[0-9]/g, m =>
+    String.fromCharCode(m.charCodeAt(0) + 0xfee0),
+  );
 }
 
 function scrollToArticle(input: string) {
@@ -142,13 +144,19 @@ function scrollToArticle(input: string) {
 
   const subParts = parts.slice(1);
   const subTextHalf = subParts.length > 0 ? 'の' + subParts.join('の') : '';
-  const subTextFull = subParts.length > 0 ? 'の' + subParts.map(s => toFullWidth(s)).join('の') : '';
-  const subTextJapaneseNumeral = subParts.length > 0 ? 'の' + subParts.map(s => toJapaneseNumeral(parseInt(s))).join('の') : '';
+  const subTextFull =
+    subParts.length > 0
+      ? 'の' + subParts.map(s => toFullWidth(s)).join('の')
+      : '';
+  const subTextJapaneseNumeral =
+    subParts.length > 0
+      ? 'の' + subParts.map(s => toJapaneseNumeral(parseInt(s))).join('の')
+      : '';
 
   const targets = [
     `第${mainArticleHalf}条${subTextHalf}`,
     `第${mainArticleFull}条${subTextFull}`,
-    `第${mainArticleJapaneseNumeral}条${subTextJapaneseNumeral}`
+    `第${mainArticleJapaneseNumeral}条${subTextJapaneseNumeral}`,
   ];
 
   type MatchCandidate = {
@@ -162,7 +170,13 @@ function scrollToArticle(input: string) {
   for (const targetText of targets) {
     // 1. Try to find by class ArticleTitle or ParagraphNum (reliable)
     const classXpath = `//*[(contains(@class, "ArticleTitle") or contains(@class, "ParagraphNum")) and contains(., "${targetText}")]`;
-    const classResult = document.evaluate(classXpath, document, null, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, null);
+    const classResult = document.evaluate(
+      classXpath,
+      document,
+      null,
+      XPathResult.ORDERED_NODE_SNAPSHOT_TYPE,
+      null,
+    );
 
     for (let i = 0; i < classResult.snapshotLength; i++) {
       const node = classResult.snapshotItem(i) as HTMLElement;
@@ -182,41 +196,51 @@ function scrollToArticle(input: string) {
       if (classAttr.includes('ParagraphNum')) score += 500;
       if (index === 0) score += 2000;
 
-      candidates.push({ node, score, text: targetText });
+      candidates.push({node, score, text: targetText});
     }
 
     if (candidates.length > 0) break;
 
     // 2. Fallback to general search
     const generalXpath = `//*[not(self::script) and not(self::style) and contains(., "${targetText}")]`;
-    const generalResult = document.evaluate(generalXpath, document, null, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, null);
+    const generalResult = document.evaluate(
+      generalXpath,
+      document,
+      null,
+      XPathResult.ORDERED_NODE_SNAPSHOT_TYPE,
+      null,
+    );
 
     for (let i = 0; i < generalResult.snapshotLength; i++) {
-        const node = generalResult.snapshotItem(i) as HTMLElement;
-        if (node.closest('a')) continue;
+      const node = generalResult.snapshotItem(i) as HTMLElement;
+      if (node.closest('a')) continue;
 
-        const normalizedText = (node.textContent || '').replace(/[\s,]/g, '');
-        const index = normalizedText.indexOf(targetText);
-        if (index === -1) continue;
+      const normalizedText = (node.textContent || '').replace(/[\s,]/g, '');
+      const index = normalizedText.indexOf(targetText);
+      if (index === -1) continue;
 
-        const nextChar = normalizedText[index + targetText.length];
-        if (nextChar && /[0-9０-９の]/.test(nextChar)) continue;
+      const nextChar = normalizedText[index + targetText.length];
+      if (nextChar && /[0-9０-９の]/.test(nextChar)) continue;
 
-        // Take it if it's the first one, but try to find a child if it's a large container
-        let bestChild = node;
-        const children = node.querySelectorAll('*');
-        for (const child of Array.from(children)) {
-            const childText = (child.textContent || '').replace(/[\s,]/g, '');
-            const cIndex = childText.indexOf(targetText);
-            if (cIndex !== -1) {
-                const cNextChar = childText[cIndex + targetText.length];
-                if (!(cNextChar && /[0-9０-９の]/.test(cNextChar))) {
-                    bestChild = child as HTMLElement;
-                }
-            }
+      // Take it if it's the first one, but try to find a child if it's a large container
+      let bestChild = node;
+      const children = node.querySelectorAll('*');
+      for (const child of Array.from(children)) {
+        const childText = (child.textContent || '').replace(/[\s,]/g, '');
+        const cIndex = childText.indexOf(targetText);
+        if (cIndex !== -1) {
+          const cNextChar = childText[cIndex + targetText.length];
+          if (!(cNextChar && /[0-9０-９の]/.test(cNextChar))) {
+            bestChild = child as HTMLElement;
+          }
         }
+      }
 
-        candidates.push({ node: bestChild, score: (index === 0 ? 100 : 0), text: targetText });
+      candidates.push({
+        node: bestChild,
+        score: index === 0 ? 100 : 0,
+        text: targetText,
+      });
     }
 
     if (candidates.length > 0) break;
@@ -226,7 +250,9 @@ function scrollToArticle(input: string) {
     // Separate TOC candidates and main content candidates
     // TOC entries usually have very short text content and are often in a sidebar
     const tocCandidates = candidates.filter(c => {
-      const isSidebar = c.node.closest('aside, nav, [class*="side"], [class*="tree"], [id*="side"], [id*="tree"]');
+      const isSidebar = c.node.closest(
+        'aside, nav, [class*="side"], [class*="tree"], [id*="side"], [id*="tree"]',
+      );
       return isSidebar;
     });
 
@@ -243,12 +269,12 @@ function scrollToArticle(input: string) {
       // Trigger the site's own jump logic by clicking the TOC entry
       bestToc.node.click();
       // Also scroll the TOC itself to show the selection
-      bestToc.node.scrollIntoView({ behavior: 'auto', block: 'center' });
+      bestToc.node.scrollIntoView({behavior: 'auto', block: 'center'});
     }
 
     if (bestMain) {
       // Scroll to and highlight the article in the main content area
-      bestMain.node.scrollIntoView({ behavior: 'auto', block: 'center' });
+      bestMain.node.scrollIntoView({behavior: 'auto', block: 'center'});
       applyPremiumHighlight(bestMain.node, bestMain.text);
     } else if (bestToc && !bestMain) {
       // If only TOC found, highlight it there as fallback
@@ -257,7 +283,9 @@ function scrollToArticle(input: string) {
 
     if (jumpTimeout) clearTimeout(jumpTimeout);
   } else {
-    console.log(`Article targets ${JSON.stringify(targets)} not found. (Input: "${input}")`);
+    console.log(
+      `Article targets ${JSON.stringify(targets)} not found. (Input: "${input}")`,
+    );
   }
 }
 
@@ -268,7 +296,10 @@ function applyPremiumHighlight(node: HTMLElement, searchText: string) {
   const textContent = node.textContent || '';
 
   // Try to find the exact match in the original text (allowing for spaces)
-  const escapedText = searchText.split('').map(c => c.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('\\s*');
+  const escapedText = searchText
+    .split('')
+    .map(c => c.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'))
+    .join('\\s*');
   const regex = new RegExp(escapedText, 'i');
   const match = textContent.match(regex);
 
@@ -291,7 +322,7 @@ function applyPremiumHighlight(node: HTMLElement, searchText: string) {
   let endOffset = 0;
 
   let cn: Node | null;
-  while (cn = walker.nextNode()) {
+  while ((cn = walker.nextNode())) {
     const tn = cn as Text;
     const len = tn.textContent?.length || 0;
 
@@ -318,7 +349,7 @@ function applyPremiumHighlight(node: HTMLElement, searchText: string) {
       borderRadius: '4px',
       padding: '2px 0',
       transition: 'all 0.6s cubic-bezier(0.4, 0, 0.2, 1)',
-      cursor: 'default'
+      cursor: 'default',
     });
 
     try {
@@ -338,7 +369,7 @@ function applyPremiumHighlight(node: HTMLElement, searchText: string) {
           }
         }, 600);
       }, 2000);
-    } catch (e) {
+    } catch {
       highlightWholeNode(node);
     }
   } else {
@@ -375,9 +406,14 @@ function triggerAutoJump() {
   }, 500);
 }
 
-document.addEventListener('keydown', (e) => {
+document.addEventListener('keydown', e => {
   const target = e.target as HTMLElement;
-  if (['INPUT', 'TEXTAREA', 'SELECT', 'CONTENTEDITABLE'].includes(target.tagName) || target.isContentEditable) {
+  if (
+    ['INPUT', 'TEXTAREA', 'SELECT', 'CONTENTEDITABLE'].includes(
+      target.tagName,
+    ) ||
+    target.isContentEditable
+  ) {
     return;
   }
 
@@ -396,10 +432,10 @@ document.addEventListener('keydown', (e) => {
     triggerAutoJump();
   } else if (e.key === 'Backspace') {
     if (inputBuffer.length > 0) {
-        inputBuffer = inputBuffer.slice(0, -1);
-        updateHUD(inputBuffer);
-        resetInputBuffer();
-        triggerAutoJump();
+      inputBuffer = inputBuffer.slice(0, -1);
+      updateHUD(inputBuffer);
+      resetInputBuffer();
+      triggerAutoJump();
     }
   } else if (e.key === 'Escape') {
     inputBuffer = '';
@@ -407,5 +443,3 @@ document.addEventListener('keydown', (e) => {
     if (jumpTimeout) clearTimeout(jumpTimeout);
   }
 });
-
-

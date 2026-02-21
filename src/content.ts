@@ -1,7 +1,15 @@
-import { convertJapaneseNumeralToNumber } from './converter';
+import {convertJapaneseNumeralToNumber} from './converter';
 
 // Tags to exclude from translation
-const EXCLUDED_TAGS = new Set(['SCRIPT', 'STYLE', 'NOSCRIPT', 'TEXTAREA', 'INPUT', 'CODE', 'PRE']);
+const EXCLUDED_TAGS = new Set([
+  'SCRIPT',
+  'STYLE',
+  'NOSCRIPT',
+  'TEXTAREA',
+  'INPUT',
+  'CODE',
+  'PRE',
+]);
 
 function shouldProcessNode(node: Node): boolean {
   if (node.nodeType !== Node.TEXT_NODE) return false;
@@ -20,7 +28,10 @@ function processNode(node: Node) {
   const text = node.textContent;
   if (!text) return;
 
-  if (/[〇一二三四五六七八九十百千万億兆]/.test(text) || text.includes('箇月')) {
+  if (
+    /[〇一二三四五六七八九十百千万億兆]/.test(text) ||
+    text.includes('箇月')
+  ) {
     const newText = convertJapaneseNumeralToNumber(text);
     if (newText !== text) {
       node.textContent = newText;
@@ -38,18 +49,16 @@ function walkAndConvert(root: Node) {
     return;
   }
 
-  const walker = document.createTreeWalker(
-    root,
-    NodeFilter.SHOW_TEXT,
-    {
-      acceptNode: (node) => {
-        return shouldProcessNode(node) && !processedNodes.has(node) ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_REJECT;
-      }
-    }
-  );
+  const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
+    acceptNode: node => {
+      return shouldProcessNode(node) && !processedNodes.has(node)
+        ? NodeFilter.FILTER_ACCEPT
+        : NodeFilter.FILTER_REJECT;
+    },
+  });
 
   let node: Node | null;
-  while (node = walker.nextNode()) {
+  while ((node = walker.nextNode())) {
     processNode(node);
   }
 }
@@ -58,14 +67,14 @@ function walkAndConvert(root: Node) {
 walkAndConvert(document.body);
 
 // Observe changes with debounce/batching if needed, but for now just optimize the handlers
-const observer = new MutationObserver((mutations) => {
+const observer = new MutationObserver(mutations => {
   for (const mutation of mutations) {
     if (mutation.type === 'childList') {
-        mutation.addedNodes.forEach(node => walkAndConvert(node));
+      mutation.addedNodes.forEach(node => walkAndConvert(node));
     } else if (mutation.type === 'characterData') {
-        // If text content changed, we might need to re-process
-        processedNodes.delete(mutation.target);
-        processNode(mutation.target);
+      // If text content changed, we might need to re-process
+      processedNodes.delete(mutation.target);
+      processNode(mutation.target);
     }
   }
 });
@@ -73,5 +82,5 @@ const observer = new MutationObserver((mutations) => {
 observer.observe(document.body, {
   childList: true,
   subtree: true,
-  characterData: true
+  characterData: true,
 });

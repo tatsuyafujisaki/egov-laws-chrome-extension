@@ -1,24 +1,16 @@
 {
+  "extends": "./node_modules/gts/tsconfig-google.json",
   "compilerOptions": {
-    "target": "ES2024",
     "lib": [
       "DOM",
-      "DOM.Iterable",
-      "ES2024"
+      "DOM.Iterable"
     ],
-    "module": "ESNext",
-    "moduleResolution": "bundler",
-    "outDir": "./dist",
-    "sourceMap": true,
-    "strict": true,
-    "esModuleInterop": true,
-    "skipLibCheck": true,
-    "noUncheckedIndexedAccess": true,
     "types": [
       "chrome-types"
     ]
   },
   "include": [
-    "src/**/*"
+    "src/**/*",
+    "vite.config.ts"
   ]
 }
