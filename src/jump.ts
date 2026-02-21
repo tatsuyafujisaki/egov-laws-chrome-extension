@@ -9,6 +9,10 @@ let hudElement: HTMLDivElement | null = null;
  * HUD（検索窓）を作成・取得する
  */
 function getOrCreateHUD(): HTMLDivElement {
+  // SPA の DOM 再レンダリングで HUD が切り離されている場合はリセット
+  if (hudElement && !hudElement.isConnected) {
+    hudElement = null;
+  }
   if (hudElement) return hudElement;
 
   hudElement = document.createElement('div');
@@ -60,9 +64,16 @@ function getOrCreateHUD(): HTMLDivElement {
       -webkit-text-fill-color: transparent;
     }
   `;
-  document.head.appendChild(style);
+  if (document.head) {
+    document.head.appendChild(style);
+  }
 
-  document.body.appendChild(hudElement);
+  if (document.body) {
+    document.body.appendChild(hudElement);
+  } else {
+    hudElement = null;
+    throw new Error('document.body is not available');
+  }
   return hudElement;
 }
 
@@ -70,23 +81,29 @@ function getOrCreateHUD(): HTMLDivElement {
  * HUDの表示を更新する
  */
 function updateHUD(text: string) {
-  const hud = getOrCreateHUD();
-  const textEl = document.getElementById('easy-egov-jump-text');
+  try {
+    const hud = getOrCreateHUD();
+    // HUD 内の span を直接参照（getElementById は detach 後に null を返すため）
+    const textEl = hud.querySelector<HTMLElement>('#easy-egov-jump-text');
 
-  if (text.length > 0) {
-    const parts = text.trim().split(/\s+/);
-    const main = parts[0] || '';
-    const sub = parts.slice(1).join('の');
-    const display = `第${main}条${sub ? 'の' + sub : ''}`;
+    if (text.length > 0) {
+      const parts = text.trim().split(/\s+/);
+      const main = parts[0] || '';
+      const sub = parts.slice(1).join('の');
+      const display = `第${main}条${sub ? 'の' + sub : ''}`;
 
-    if (textEl) textEl.textContent = display;
-    hud.style.opacity = '1';
-    hud.style.transform = 'translateX(-50%) translateY(0)';
-    hud.style.scale = '1';
-  } else {
-    hud.style.opacity = '0';
-    hud.style.transform = 'translateX(-50%) translateY(30px)';
-    hud.style.scale = '0.9';
+      if (textEl) textEl.textContent = display;
+      hud.style.opacity = '1';
+      hud.style.transform = 'translateX(-50%) translateY(0)';
+      hud.style.scale = '1';
+    } else {
+      hud.style.opacity = '0';
+      hud.style.transform = 'translateX(-50%) translateY(30px)';
+      hud.style.scale = '0.9';
+    }
+  } catch (err) {
+    console.warn('[jump] updateHUD error:', err);
+    hudElement = null;
   }
 }
 
@@ -407,39 +424,42 @@ function triggerAutoJump() {
 }
 
 document.addEventListener('keydown', e => {
-  const target = e.target as HTMLElement;
-  if (
-    ['INPUT', 'TEXTAREA', 'SELECT', 'CONTENTEDITABLE'].includes(
-      target.tagName,
-    ) ||
-    target.isContentEditable
-  ) {
-    return;
-  }
-
-  if (/^[0-9 ]$/.test(e.key)) {
-    if (e.key === ' ' && inputBuffer.length === 0) {
+  try {
+    const target = e.target as HTMLElement | null;
+    if (
+      !target ||
+      ['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName) ||
+      target.isContentEditable
+    ) {
       return;
     }
 
-    if (e.key === ' ') {
-      e.preventDefault();
-    }
+    if (/^[0-9 ]$/.test(e.key)) {
+      if (e.key === ' ' && inputBuffer.length === 0) {
+        return;
+      }
 
-    inputBuffer += e.key;
-    updateHUD(inputBuffer);
-    resetInputBuffer();
-    triggerAutoJump();
-  } else if (e.key === 'Backspace') {
-    if (inputBuffer.length > 0) {
-      inputBuffer = inputBuffer.slice(0, -1);
+      if (e.key === ' ') {
+        e.preventDefault();
+      }
+
+      inputBuffer += e.key;
       updateHUD(inputBuffer);
       resetInputBuffer();
       triggerAutoJump();
+    } else if (e.key === 'Backspace') {
+      if (inputBuffer.length > 0) {
+        inputBuffer = inputBuffer.slice(0, -1);
+        updateHUD(inputBuffer);
+        resetInputBuffer();
+        triggerAutoJump();
+      }
+    } else if (e.key === 'Escape') {
+      inputBuffer = '';
+      updateHUD('');
+      if (jumpTimeout) clearTimeout(jumpTimeout);
     }
-  } else if (e.key === 'Escape') {
-    inputBuffer = '';
-    updateHUD('');
-    if (jumpTimeout) clearTimeout(jumpTimeout);
+  } catch (err) {
+    console.warn('[jump] keydown handler error:', err);
   }
 });

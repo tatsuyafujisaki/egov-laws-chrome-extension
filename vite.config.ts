@@ -9,6 +9,8 @@ export default defineConfig({
       },
       output: {
         entryFileNames: '[name].js',
+        banner: '(function () {',
+        footer: '})();',
       },
     },
     sourcemap: true,
