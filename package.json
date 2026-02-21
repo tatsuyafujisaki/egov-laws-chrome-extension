@@ -1,6 +1,4 @@
 {
-  "name": "egov-laws-arabic-numerals",
-  "version": "0.1.1",
   "devDependencies": {
     "chrome-types": "latest",
     "typescript": "latest",
