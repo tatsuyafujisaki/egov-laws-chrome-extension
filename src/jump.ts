@@ -185,8 +185,8 @@ function scrollToArticle(input: string) {
   const candidates: MatchCandidate[] = [];
 
   for (const targetText of targets) {
-    // 1. Try to find by class ArticleTitle or ParagraphNum (reliable)
-    const classXpath = `//*[(contains(@class, "ArticleTitle") or contains(@class, "ParagraphNum")) and contains(., "${targetText}")]`;
+    // 1. Try to find by class ArticleTitle, ParagraphNum, or paragraphtitle (reliable)
+    const classXpath = `//*[(contains(@class, "ArticleTitle") or contains(@class, "ParagraphNum") or contains(@class, "paragraphtitle")) and contains(., "${targetText}")]`;
     const classResult = document.evaluate(
       classXpath,
       document,
@@ -209,7 +209,11 @@ function scrollToArticle(input: string) {
 
       let score = 0;
       const classAttr = node.getAttribute('class') || '';
-      if (classAttr.includes('ArticleTitle')) score += 1000;
+      if (
+        classAttr.includes('ArticleTitle') ||
+        classAttr.includes('paragraphtitle')
+      )
+        score += 1000;
       if (classAttr.includes('ParagraphNum')) score += 500;
       if (index === 0) score += 2000;
 
@@ -268,7 +272,7 @@ function scrollToArticle(input: string) {
     // TOC entries usually have very short text content and are often in a sidebar
     const tocCandidates = candidates.filter(c => {
       const isSidebar = c.node.closest(
-        'aside, nav, [class*="side"], [class*="tree"], [id*="side"], [id*="tree"]',
+        'aside, nav, [class*="side"], [class*="tree"], [id*="side"], [id*="tree"], [class*="toc"], [id*="toc"]',
       );
       return isSidebar;
     });
