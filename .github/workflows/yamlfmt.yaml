@@ -1,0 +1,20 @@
+on:
+  push:
+    paths:
+      - "*.yaml"
+      - "*.yml"
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  yamlfmt:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-go@v6
+      - run: go install github.com/google/yamlfmt/cmd/yamlfmt@latest
+      - run: yamlfmt -lint .
