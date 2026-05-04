@@ -1,4 +1,4 @@
-export {};
+import { arabicToJapanese } from './numeral-converter';
 
 let inputBuffer = '';
 let inputTimeout: number | undefined;
@@ -115,30 +115,6 @@ function resetInputBuffer() {
   }, 1000);
 }
 
-function toJapaneseNumeral(n: number): string {
-  if (n === 0) return '〇';
-  const units = ['', '十', '百', '千'];
-  const digits = ['', '一', '二', '三', '四', '五', '六', '七', '八', '九'];
-  let res = '';
-  const s = n.toString();
-  for (let i = 0; i < s.length; i++) {
-    const char = s[s.length - 1 - i];
-    if (!char) continue;
-    const d = parseInt(char);
-    const pos = i % 4;
-    if (d !== 0) {
-      const digitJapaneseNumeral = digits[d] || '';
-      const unitJapaneseNumeral = units[pos] || '';
-      const temp = d === 1 && pos > 0 ? '' : digitJapaneseNumeral;
-      res = temp + unitJapaneseNumeral + res;
-    }
-    if (i === 3 && s.length > 4) {
-      res = '万' + res;
-    }
-  }
-  return res;
-}
-
 function toFullWidth(s: string): string {
   return s.replace(/[0-9]/g, m =>
     String.fromCharCode(m.charCodeAt(0) + 0xfee0),
@@ -157,7 +133,7 @@ function scrollToArticle(input: string) {
 
   const mainArticleHalf = parts[0]!;
   const mainArticleFull = toFullWidth(mainArticleHalf);
-  const mainArticleJapaneseNumeral = toJapaneseNumeral(mainArticleNum);
+  const mainArticleJapaneseNumeral = arabicToJapanese(mainArticleNum);
 
   const subParts = parts.slice(1);
   const subTextHalf = subParts.length > 0 ? 'の' + subParts.join('の') : '';
@@ -167,7 +143,7 @@ function scrollToArticle(input: string) {
       : '';
   const subTextJapaneseNumeral =
     subParts.length > 0
-      ? 'の' + subParts.map(s => toJapaneseNumeral(parseInt(s))).join('の')
+      ? 'の' + subParts.map(s => arabicToJapanese(parseInt(s))).join('の')
       : '';
 
   const targets = [

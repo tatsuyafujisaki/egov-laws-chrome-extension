@@ -4,13 +4,11 @@ export default defineConfig({
   build: {
     rollupOptions: {
       input: {
-        content: 'src/content.ts',
-        jump: 'src/jump.ts',
+        main: 'src/main.ts',
       },
       output: {
         entryFileNames: '[name].js',
-        banner: '(function () {',
-        footer: '})();',
+        format: 'iife',
       },
     },
     sourcemap: true,

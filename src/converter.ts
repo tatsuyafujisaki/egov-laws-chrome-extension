@@ -1,3 +1,5 @@
+import { japaneseToArabic } from './numeral-converter';
+
 const japaneseNumeralToArabicNumeral: {[key: string]: number} = {
   〇: 0,
   一: 1,
@@ -9,18 +11,6 @@ const japaneseNumeralToArabicNumeral: {[key: string]: number} = {
   七: 7,
   八: 8,
   九: 9,
-};
-
-const smallUnits: {[key: string]: number} = {
-  十: 10,
-  百: 100,
-  千: 1_000,
-};
-
-const largeUnits: {[key: string]: number} = {
-  万: 10_000,
-  億: 100_000_000,
-  兆: 1_000_000_000_000,
 };
 
 const KANJI_NUMS = '〇一二三四五六七八九十百千万億兆';
@@ -103,7 +93,7 @@ const rules: ConversionRule[] = [
   {
     pattern: new RegExp(`[${KANJI_NUMS}]+([万億兆])[${KANJI_NUMS}]*`, 'g'),
     replace: match => {
-      const val = parseNamedJapaneseNumeral(match);
+      const val = japaneseToArabic(match);
       return isNaN(val) ? match : val.toLocaleString();
     },
   },
@@ -132,42 +122,6 @@ function convertString(str: string): string {
       .map(c => (c === '・' ? '.' : (japaneseNumeralToArabicNumeral[c] ?? c)))
       .join('');
   } else {
-    return parseNamedJapaneseNumeral(str).toString();
+    return japaneseToArabic(str).toString();
   }
-}
-
-function parseNamedJapaneseNumeral(str: string): number {
-  let total = 0;
-  let currentBlock = 0;
-  let currentDigit = -1;
-
-  for (const char of str) {
-    if (japaneseNumeralToArabicNumeral[char] !== undefined) {
-      if (currentDigit !== -1) {
-        currentBlock += currentDigit;
-      }
-      currentDigit = japaneseNumeralToArabicNumeral[char];
-    } else if (smallUnits[char] !== undefined) {
-      const digit = currentDigit === -1 ? 1 : currentDigit;
-      currentBlock += digit * smallUnits[char];
-      currentDigit = -1;
-    } else if (largeUnits[char] !== undefined) {
-      let segment = currentBlock;
-      if (currentDigit !== -1) {
-        segment += currentDigit;
-        currentDigit = -1;
-      }
-      if (segment === 0) segment = 1;
-
-      total += segment * largeUnits[char];
-      currentBlock = 0;
-    }
-  }
-
-  if (currentDigit !== -1) {
-    currentBlock += currentDigit;
-  }
-  total += currentBlock;
-
-  return total;
 }
