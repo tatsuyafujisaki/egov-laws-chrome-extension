@@ -1,10 +1,9 @@
 {
   "devDependencies": {
+    "@types/node": "latest",
     "chrome-types": "latest",
     "typescript": "latest",
-    "vite": "latest",
-    "gts": "latest",
-    "@types/node": "latest"
+    "vite": "latest"
   },
   "private": true
 }

@@ -1,6 +1,8 @@
 {
-  "extends": "gts/tsconfig-google.json",
   "compilerOptions": {
+    "allowUnreachableCode": false,
+    "allowUnusedLabels": false,
+    "forceConsistentCasingInFileNames": true,
     "lib": [
       "ESNext",
       "DOM",
@@ -8,6 +10,13 @@
     ],
     "module": "ESNext",
     "moduleResolution": "bundler",
+    "noEmitOnError": true,
+    "noFallthroughCasesInSwitch": true,
+    "noImplicitReturns": true,
+    "pretty": true,
+    "sourceMap": true,
+    "strict": true,
+    "target": "ES2022",
     "types": [
       "chrome-types"
     ]
