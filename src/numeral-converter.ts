@@ -19,8 +19,8 @@ export function arabicToJapanese(num: number): string {
     while (chunk > 0) {
       const d = chunk % 10;
       if (d) {
-        const digitPart = (d === 1 && j > 0) ? "" : digits[d];
-        chunkStr = digitPart + units[j] + chunkStr;
+        const digitPart = (d === 1 && j > 0) ? "" : (digits[d] ?? "");
+        chunkStr = digitPart + (units[j] ?? "") + chunkStr;
       }
       chunk = Math.floor(chunk / 10);
       j++;
@@ -47,13 +47,16 @@ export function japaneseToArabic(kanji: string): number {
   let number = 0;
 
   for (const ch of kanji) {
-    if (ch in digitMap) {
-      number = digitMap[ch];
-    } else if (ch in pos) {
-      section += (number || 1) * pos[ch];
+    const digit = digitMap[ch];
+    const posUnit = pos[ch];
+    const bigUnit = big[ch];
+    if (digit !== undefined) {
+      number = digit;
+    } else if (posUnit !== undefined) {
+      section += (number || 1) * posUnit;
       number = 0;
-    } else if (ch in big) {
-      total += (section + number || 1) * big[ch];
+    } else if (bigUnit !== undefined) {
+      total += (section + number || 1) * bigUnit;
       section = number = 0;
     }
   }
